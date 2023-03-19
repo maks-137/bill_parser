@@ -1,5 +1,5 @@
 from pipeline import BillParserPipeline
-import bill_parser
+import bill_parser_async
 from PyQt5.QtWidgets import QApplication
 import sys
 import main_window
@@ -14,11 +14,7 @@ def main(input_parameters: InputParameters) -> None:
         download_parameters = input_parameters.download_parameters
         file_parameters = input_parameters.file_parameters
 
-        bill_items = bill_parser.run(serch_parameters, parse_parameters, download_parameters)
-        bill_cards = (item.card for item in bill_items)
-        bill_documents = (item.documents for item in bill_items)
-
-        del bill_items
+        bill_cards, bill_documents = bill_parser_async.run(serch_parameters, parse_parameters, download_parameters)
 
         pipeline = BillParserPipeline(
             bill_cards=bill_cards,

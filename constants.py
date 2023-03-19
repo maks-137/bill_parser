@@ -6,6 +6,8 @@ PAYLOAD_FIELDS = [
     'BillSearchModel.registrationRangeEnd',
     'BillSearchModel.name',
     'BillSearchModel.detailView',
+    'Paging.page',
+    'Paging.per_page',
 ]
 
 

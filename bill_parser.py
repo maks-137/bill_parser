@@ -1,3 +1,5 @@
+import time
+
 import requests
 from bs4 import BeautifulSoup
 from models import BillCard, BillSearchParameters, BillParseParameters, DocumentsDownloadParameters, BillDocuments,\
@@ -67,9 +69,8 @@ def run(search_parameters: BillSearchParameters, parse_parameters: BillParsePara
 
         bill_items.append(BillItem(card=card, documents=documents))
 
-        break
-
-    return bill_items
+    for item in bill_items:
+        print(item)
 
 
 def _parse_documents(soup: BeautifulSoup, download_parameters: DocumentsDownloadParameters) -> BillDocuments:
@@ -78,8 +79,19 @@ def _parse_documents(soup: BeautifulSoup, download_parameters: DocumentsDownload
     links = dict()
     for div, (key, flag) in zip(info_divs, download_parameters.__dict__.items()):
         if flag:
-            item = {a.text.strip(): f"https://itd.rada.gov.ua/{a.get('href')}" for a in
-                    field_function_pairs['links'][key](div)}
+            a_elements = field_function_pairs['links'][key](div)
+            item = {}
+            for a in a_elements:
+                doc_name = a.text.strip()
+
+                if doc_name in item.keys():
+                    for i in range(1, len(a_elements)+1):
+                        if (alt_name := f"{doc_name}({i})") not in item.keys():
+                            doc_name = alt_name
+                            break
+
+                item[doc_name] = f"https://itd.rada.gov.ua/{a.get('href')}"
+
             links[key] = item
 
     return BillDocuments(registration_number, **links)
@@ -89,9 +101,17 @@ def _parse_bill_card(soup: BeautifulSoup, parse_parameters: BillParseParameters)
     info_divs = [div.find_all('div')[1] for div in soup.find_all('div', class_='row')[:-1]]
     info_divs.insert(1, info_divs[0])
 
-    if len(info_divs) == 11:
+    if len(info_divs) == 12:
+        del info_divs[4]
         info_divs.insert(3, info_divs[2])
-    elif len(info_divs) == 10:
+
+    elif len(info_divs) == 11:
+        if len(info_divs[2].text.split('від')) == 1:
+            del info_divs[3]
+        else:
+            info_divs.insert(3, info_divs[2])
+
+    if len(info_divs) == 10:
         info_divs.insert(2, False)
         info_divs.insert(3, False)
 
@@ -103,4 +123,4 @@ def _parse_bill_card(soup: BeautifulSoup, parse_parameters: BillParseParameters)
     return BillCard(**bill_info)
 
 
-# run(search_parameters=BillSearchModel(), parse_parameters=BillParseModel(), download_parameters=BillDownloadModel())
+run(search_parameters=BillSearchParameters(), parse_parameters=BillParseParameters(), download_parameters=DocumentsDownloadParameters())

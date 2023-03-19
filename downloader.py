@@ -1,8 +1,13 @@
 import os
+import time
 
 import requests
 from models import BillDocuments, DocumentsDownloadParameters
 from typing import Generator
+
+from fake_useragent import UserAgent
+
+ua = UserAgent()
 
 
 def download_documents(documents: Generator[BillDocuments, None, None],
@@ -33,7 +38,7 @@ def download_documents(documents: Generator[BillDocuments, None, None],
                 os.makedirs(full_dir)
 
             for name, link in item._asdict()[doc_rubric].items():
-                document = requests.get(link, stream=True)
+                document = requests.get(link)
                 doc_type = doc_types[document.headers['Content-Type']]
                 with open(fr"{full_dir}\{name}.{doc_type}", 'wb',) as file:
                     for chunk in document.iter_content():
@@ -41,19 +46,19 @@ def download_documents(documents: Generator[BillDocuments, None, None],
 
                 print(name)
 
-                break
+documents = (i for i in [BillDocuments(registration_number='0142',
+    governing_documents={
+        'Проект Закону (24.01.2022)': 'https://itd.rada.gov.ua/billInfo/Bills/pubFile/1182227',
+        'Фінансово-економічне обгрунтування (24.01.2022)': 'https://itd.rada.gov.ua/billInfo/Bills/pubFile/1182222',
+        'Пояснювальна записка (24.01.2022)': 'https://itd.rada.gov.ua/billInfo/Bills/pubFile/1182226',
+        'Подання (24.01.2022)': 'https://itd.rada.gov.ua/billInfo/Bills/pubFile/1182224',
+        'Проект Постанови до Закону (іншого Акта) (24.01.2022)': 'https://itd.rada.gov.ua/billInfo/Bills/pubFile/1182225',
+        'Текст міжнародного договору (24.01.2022)': 'https://itd.rada.gov.ua/billInfo/Bills/pubFile/1182223',
+    },
+    related_to_work_documents={})])
 
-            break
-
-        break
+download_parameters = DocumentsDownloadParameters(governing_documents=True, related_to_work_documents=True)
 
 
-# documents = (i for i in [BillDocumentsModel(registration_number='0142',
-#     governing_documents={'doc': 'https://itd.rada.gov.ua/billInfo/Bills/pubFile/24770'},
-#     related_to_work_documents={})])
-#
-# download_parameters = BillDownloadModel(governing_documents=True, related_to_work_documents=True)
-#
-# download_documents(documents=documents, download_parameters=download_parameters)
-
+download_documents(documents=documents, download_parameters=download_parameters, path=r'E:\Python\bill_parser')
 

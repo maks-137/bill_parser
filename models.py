@@ -10,7 +10,7 @@ class DocumentsDownloadParameters:
 
 
 class BillDocuments(NamedTuple):
-    registration_number: str
+    registration_number: str = ''
     governing_documents: dict[str, str] = {}
     related_to_work_documents: dict[str, str] = {}
 
@@ -55,6 +55,8 @@ class BillSearchParameters:
     registration_range_end: str = ''
     name: str = ''
     detail_view: bool = False
+    page: int = 1
+    per_page: int = 50
 
     def get_in_payload_format(self):
         data = {}
@@ -68,8 +70,8 @@ class BillSearchParameters:
 
 
 class BillItem(NamedTuple):
-    card: BillCard
-    documents: BillDocuments
+    card: BillCard = BillCard()
+    documents: BillDocuments = BillDocuments()
 
 
 @dataclass
