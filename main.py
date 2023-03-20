@@ -1,20 +1,20 @@
 from pipeline import BillParserPipeline
-import bill_parser_async
+import bill_parser
 from PyQt5.QtWidgets import QApplication
 import sys
-import main_window
 from models import InputParameters
-import downloader
+import main_window
+import qt_app
+from PyQt5.QtWidgets import QMainWindow
 
 
-def main(input_parameters: InputParameters) -> None:
+def main(input_parameters: InputParameters, window) -> None:
     try:
         serch_parameters = input_parameters.search_parameters
         parse_parameters = input_parameters.parse_parameters
-        download_parameters = input_parameters.download_parameters
         file_parameters = input_parameters.file_parameters
 
-        bill_cards, bill_documents = bill_parser_async.run(serch_parameters, parse_parameters, download_parameters)
+        bill_cards = bill_parser.run(serch_parameters, parse_parameters, window)
 
         pipeline = BillParserPipeline(
             bill_cards=bill_cards,
@@ -23,19 +23,21 @@ def main(input_parameters: InputParameters) -> None:
             path=file_parameters.dir
         )
         pipeline.save_bill_cards()
-
-        downloader.download_documents(documents=bill_documents, download_parameters=download_parameters,
-                                      path=file_parameters.dir)
-
-        print('FINISH')
-
     except Exception as ex:
         print(ex)
-        return
 
 
 if __name__ == '__main__':
+    # app = QApplication(sys.argv)
+    # window = main_window.UI()
+    # window.show()
+    # app.exec_()
+
     app = QApplication(sys.argv)
-    window = main_window.UI()
-    window.show()
-    app.exec_()
+    MainWindow = QMainWindow()
+    ui = qt_app.Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
+    sys.exit(app.exec_())
+
+

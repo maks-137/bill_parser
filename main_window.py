@@ -1,13 +1,24 @@
 import os
-import sys
+import time
 
 from PyQt5 import QtWidgets, uic
-from PyQt5.QtWidgets import QMainWindow, QApplication
-from models import BillParseParameters, BillSearchParameters, DocumentsDownloadParameters, InputParameters, \
-    FileParameters
-
+from PyQt5.QtWidgets import QMainWindow
+from models import BillParseParameters, BillSearchParameters, FileParameters
 import constants
+from models import InputParameters
+from PyQt5.QtCore import QThread
 import main
+
+
+class MainThread(QThread):
+    def __init__(self, input_parameters: InputParameters, window):
+        super().__init__()
+        self.input_parameters = input_parameters
+        self.window = window
+
+    def run(self) -> None:
+        main.main(input_parameters=self.input_parameters, window=self.window)
+        return
 
 
 class UI(QMainWindow):
@@ -40,16 +51,29 @@ class UI(QMainWindow):
         # start_parsing_pushButton connection
         self.start_parsing_pushButton.clicked.connect(self._grab_input_parameters)
 
+        # progress_bar
+        self.pbar_max_value = 1
+        self.progressBar.setMinimum(0)
+
+    def set_progress_bar(self, max_value):
+        self.progressBar.setValue(0)
+        self.pbar_max_value = max_value
+        self.progressBar.setMaximum(max_value)
+
+    def triger_progress_bar(self):
+        value = int(self.progressBar.value())
+        self.progressBar.setValue(value + 1)
+
     def _grab_input_parameters(self) -> None:
 
         input_parameters = InputParameters(
             search_parameters=self._grab_search_parameters(),
             parse_parameters=self._grab_parse_parameters(),
             file_parameters=self._grab_file_parameters(),
-            download_parameters=self._grab_download_parameters()
         )
 
-        main.main(input_parameters)
+        self.main_thread_instanc = MainThread(input_parameters, window=self)
+        self.main_thread_instanc.start()
 
     def _grab_file_parameters(self) -> FileParameters:
         file_parameters = FileParameters()
@@ -68,15 +92,6 @@ class UI(QMainWindow):
                 parse_parameters.__dict__[key] = False
 
         return parse_parameters
-
-    def _grab_download_parameters(self):
-        download_parameters = DocumentsDownloadParameters()
-        for field, key in zip(self.download_parameters_verticalGroupBox.children()[1:],
-                              DocumentsDownloadParameters.__annotations__.keys()):
-            if field:
-                download_parameters.__dict__[key] = True
-
-        return download_parameters
 
     def _grab_search_parameters(self) -> BillSearchParameters:
         grab_functions = {
@@ -101,10 +116,3 @@ class UI(QMainWindow):
     def _show_dir_dialog(self):
         fname = str(QtWidgets.QFileDialog.getExistingDirectory(self, 'Оберіть директорію')).replace('/', '\\')
         self.directrory_textEdit.setText(fname)
-
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    window = UI()
-    window.show()
-    app.exec_()

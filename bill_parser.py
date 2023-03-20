@@ -1,10 +1,10 @@
-import time
-
+from typing import Generator
 import requests
 from bs4 import BeautifulSoup
-from models import BillCard, BillSearchParameters, BillParseParameters, DocumentsDownloadParameters, BillDocuments,\
-    BillItem
+
+from models import BillCard, BillSearchParameters, BillParseParameters
 from fake_useragent import UserAgent
+from main_window import UI
 
 
 parse_functions = {
@@ -49,8 +49,8 @@ field_function_pairs = {
 }
 
 
-def run(search_parameters: BillSearchParameters, parse_parameters: BillParseParameters,
-        download_parameters: DocumentsDownloadParameters) -> list[BillItem]:
+def run(search_parameters: BillSearchParameters, parse_parameters: BillParseParameters, window: UI)\
+        -> Generator[BillCard, None, None]:
     ua = UserAgent()
     response = requests.post(
         url='https://itd.rada.gov.ua/billInfo/Bills/searchResults',
@@ -58,43 +58,48 @@ def run(search_parameters: BillSearchParameters, parse_parameters: BillParsePara
         headers={'User-Agent': ua.random}
     )
 
+    if response.status_code != 200:
+        print('invalid req (first search)')
+
     soup = BeautifulSoup(response.text, 'lxml')
-    links_to_bills = (item['href'] for item in soup.find_all('a', class_='link-blue'))
-    bill_items = []
-    for link in links_to_bills:
-        response = requests.get(link)
+    bill_number = int(soup.find('p', class_='condition').text.split(':')[1].strip())
+    window.set_progress_bar(max_value=bill_number)
+
+    page_number = soup.find('div', class_='pagination').findChildren()[-2].text.strip()
+    for n in range(1, int(page_number)+1):
+        search_parameters = BillSearchParameters(**search_parameters.__dict__)
+        search_parameters.page = n
+        response = requests.post(
+            url='https://itd.rada.gov.ua/billInfo/Bills/searchResults',
+            data=search_parameters.get_in_payload_format(),
+            headers={'User-Agent': ua.random}
+        )
+
+        if response.status_code != 200:
+            print('invalid req (search)')
+            continue
+
         soup = BeautifulSoup(response.text, 'lxml')
-        card = _parse_bill_card(soup, parse_parameters)
-        documents = _parse_documents(soup, download_parameters)
+        links_to_bills = (item['href'] for item in soup.find_all('a', class_='link-blue'))
+        for link in links_to_bills:
+            response = requests.get(link)
 
-        bill_items.append(BillItem(card=card, documents=documents))
+            if response.status_code != 200:
+                print('invalid req (bill)')
+                continue
 
-    for item in bill_items:
-        print(item)
+            soup = BeautifulSoup(response.text, 'lxml')
+            try:
+                card = _parse_bill_card(soup, parse_parameters)
+            except IndexError:
+                print('invalid bill')
+                continue
 
+            window.triger_progress_bar()
 
-def _parse_documents(soup: BeautifulSoup, download_parameters: DocumentsDownloadParameters) -> BillDocuments:
-    info_divs = [div.find_all('div')[1] for div in soup.find_all('div', class_='row')[-3:-1]]
-    registration_number = parse_functions['text']['parse_number'](soup.find('div', class_='row').find_all('div')[1])
-    links = dict()
-    for div, (key, flag) in zip(info_divs, download_parameters.__dict__.items()):
-        if flag:
-            a_elements = field_function_pairs['links'][key](div)
-            item = {}
-            for a in a_elements:
-                doc_name = a.text.strip()
+            yield card
 
-                if doc_name in item.keys():
-                    for i in range(1, len(a_elements)+1):
-                        if (alt_name := f"{doc_name}({i})") not in item.keys():
-                            doc_name = alt_name
-                            break
-
-                item[doc_name] = f"https://itd.rada.gov.ua/{a.get('href')}"
-
-            links[key] = item
-
-    return BillDocuments(registration_number, **links)
+    window.progressBar.setValue(bill_number)
 
 
 def _parse_bill_card(soup: BeautifulSoup, parse_parameters: BillParseParameters) -> BillCard:
@@ -123,4 +128,25 @@ def _parse_bill_card(soup: BeautifulSoup, parse_parameters: BillParseParameters)
     return BillCard(**bill_info)
 
 
-run(search_parameters=BillSearchParameters(), parse_parameters=BillParseParameters(), download_parameters=DocumentsDownloadParameters())
+# def _parse_documents(soup: BeautifulSoup, download_parameters: DocumentsDownloadParameters) -> BillDocuments:
+#     info_divs = [div.find_all('div')[1] for div in soup.find_all('div', class_='row')[-3:-1]]
+#     registration_number = parse_functions['text']['parse_number'](soup.find('div', class_='row').find_all('div')[1])
+#     links = dict()
+#     for div, (key, flag) in zip(info_divs, download_parameters.__dict__.items()):
+#         if flag:
+#             a_elements = field_function_pairs['links'][key](div)
+#             item = {}
+#             for a in a_elements:
+#                 doc_name = a.text.strip()
+#
+#                 if doc_name in item.keys():
+#                     for i in range(1, len(a_elements)+1):
+#                         if (alt_name := f"{doc_name}({i})") not in item.keys():
+#                             doc_name = alt_name
+#                             break
+#
+#                 item[doc_name] = f"https://itd.rada.gov.ua/{a.get('href')}"
+#
+#             links[key] = item
+#
+#     return BillDocuments(registration_number, **links)

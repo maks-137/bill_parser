@@ -69,11 +69,6 @@ class BillSearchParameters:
         return data
 
 
-class BillItem(NamedTuple):
-    card: BillCard = BillCard()
-    documents: BillDocuments = BillDocuments()
-
-
 @dataclass
 class FileParameters:
     file_format: str = ''
@@ -85,5 +80,4 @@ class InputParameters:
     search_parameters: BillSearchParameters
     parse_parameters: BillParseParameters
     file_parameters: FileParameters
-    download_parameters: DocumentsDownloadParameters
 

@@ -38,7 +38,7 @@ QTextEdit{font: 14pt &quot;MS Shell Dlg 2&quot;;}
      </rect>
     </property>
     <property name="currentIndex">
-     <number>1</number>
+     <number>0</number>
     </property>
     <widget class="QWidget" name="bill_search_parameters_tab">
      <attribute name="title">
@@ -257,7 +257,7 @@ QTextEdit{font: 14pt &quot;MS Shell Dlg 2&quot;;}
            </rect>
           </property>
           <property name="placeholderText">
-           <string>1</string>
+           <string/>
           </property>
          </widget>
         </widget>
@@ -396,7 +396,7 @@ QTextEdit{font: 14pt &quot;MS Shell Dlg 2&quot;;}
       <property name="geometry">
        <rect>
         <x>350</x>
-        <y>700</y>
+        <y>550</y>
         <width>431</width>
         <height>71</height>
        </rect>
@@ -405,7 +405,20 @@ QTextEdit{font: 14pt &quot;MS Shell Dlg 2&quot;;}
        <string notr="true">font: 75 14pt &quot;MS Shell Dlg 2&quot;;</string>
       </property>
       <property name="text">
-       <string>START</string>
+       <string>Старт</string>
+      </property>
+     </widget>
+     <widget class="QProgressBar" name="progressBar">
+      <property name="geometry">
+       <rect>
+        <x>350</x>
+        <y>650</y>
+        <width>468</width>
+        <height>30</height>
+       </rect>
+      </property>
+      <property name="value">
+       <number>0</number>
       </property>
      </widget>
     </widget>
@@ -478,83 +491,6 @@ QTextEdit{font: 14pt &quot;MS Shell Dlg 2&quot;;}
          </rect>
         </property>
         <layout class="QVBoxLayout" name="fields_to_parse_verticalLayout"/>
-       </widget>
-      </widget>
-      <widget class="QGroupBox" name="download_parameters_groupBox">
-       <property name="geometry">
-        <rect>
-         <x>570</x>
-         <y>15</y>
-         <width>460</width>
-         <height>140</height>
-        </rect>
-       </property>
-       <property name="title">
-        <string/>
-       </property>
-       <widget class="QLabel" name="download_parameters_label">
-        <property name="geometry">
-         <rect>
-          <x>60</x>
-          <y>0</y>
-          <width>300</width>
-          <height>40</height>
-         </rect>
-        </property>
-        <property name="font">
-         <font>
-          <family>MS Shell Dlg 2</family>
-          <pointsize>14</pointsize>
-          <weight>75</weight>
-          <italic>false</italic>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="styleSheet">
-         <string notr="true"/>
-        </property>
-        <property name="text">
-         <string>Файли для скачування</string>
-        </property>
-       </widget>
-       <widget class="QGroupBox" name="download_parameters_verticalGroupBox">
-        <property name="geometry">
-         <rect>
-          <x>0</x>
-          <y>40</y>
-          <width>471</width>
-          <height>85</height>
-         </rect>
-        </property>
-        <property name="title">
-         <string/>
-        </property>
-        <layout class="QVBoxLayout" name="verticalLayout_2">
-         <item>
-          <widget class="QCheckBox" name="governing_documents_checkBox">
-           <property name="font">
-            <font>
-             <pointsize>12</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string>Текст законопроекту та супровідні документи</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QCheckBox" name="related_to_work_documents_checkBox">
-           <property name="font">
-            <font>
-             <pointsize>12</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string>Документи, пов'язані із роботою</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
        </widget>
       </widget>
       <widget class="QGroupBox" name="file_format_parameters_verticalGroupBox">
