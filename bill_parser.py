@@ -5,6 +5,7 @@ from bs4 import BeautifulSoup
 from models import BillCard, BillSearchParameters, BillParseParameters
 from fake_useragent import UserAgent
 from main_window import UI
+from requests.exceptions import ConnectionError
 
 
 parse_functions = {
@@ -60,6 +61,7 @@ def run(search_parameters: BillSearchParameters, parse_parameters: BillParsePara
 
     if response.status_code != 200:
         print('invalid req (first search)')
+        raise ConnectionError
 
     soup = BeautifulSoup(response.text, 'lxml')
     bill_number = int(soup.find('p', class_='condition').text.split(':')[1].strip())
@@ -91,7 +93,7 @@ def run(search_parameters: BillSearchParameters, parse_parameters: BillParsePara
             soup = BeautifulSoup(response.text, 'lxml')
             try:
                 card = _parse_bill_card(soup, parse_parameters)
-            except IndexError:
+            except Exception:
                 print('invalid bill')
                 continue
 
